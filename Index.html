@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Policy Review Email Generator</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script type="text/babel">
+        const { useState } = React;
+
+        // Lucide React Icons (simplified versions)
+        const Plus = () => (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+        );
+
+        const Trash2 = () => (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                <line x1="10" y1="11" x2="10" y2="17"></line>
+                <line x1="14" y1="11" x2="14" y2="17"></line>
+            </svg>
+        );
+
+        const Mail = () => (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                <polyline points="22,6 12,13 2,6"></polyline>
+            </svg>
+        );
+
+        const User = () => (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+        );
+
+        const FileText = () => (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+        );
+
+        const Heart = () => (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+            </svg>
+        );
+
+        const Shield = () => (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+        );
+
+        const Users = () => (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+        );
+
+        const PolicyReviewEmailGenerator = () => {
+          const [primaryClient, setPrimaryClient] = useState('');
+          const [dependentClients, setDependentClients] = useState(['']);
+          const [policies, setPolicies] = useState([]);
+          const [generatedEmail, setGeneratedEmail] = useState('');
+          const [generatedHtmlEmail, setGeneratedHtmlEmail] = useState('');
+
+          const addDependentClient = () => {
+            setDependentClients([...dependentClients, '']);
+          };
+
+          const removeDependentClient = (index) => {
+            setDependentClients(dependentClients.filter((_, i) => i !== index));
+          };
+
+          const updateDependentClient = (index, value) => {
+            setDependentClients(dependentClients.map((client, i) => 
+              i === index ? value : client
+            ));
+          };
+
+          const getAllClientNames = () => {
+            const allClients = [primaryClient, ...dependentClients.filter(d => d.trim())];
+            return allClients.filter(c => c.trim());
+          };
+
+          const addPolicy = () => {
+            const allClients = getAllClientNames();
+            const initialMembers = {};
+            allClients.forEach(client => {
+              initialMembers[client] = false;
+            });
+            
+            setPolicies([...policies, {
+              id: Date.now(),
+              name: '',
+              type: 'health',
+              coveredMembers: initialMembers,
+              status: 'active',
+              premium: '',
+              notes: '',
+              lastPaymentDate: '',
+              gracePeriodEndDate: '',
+              terminationDate: ''
+            }]);
+          };
+
+          const removePolicy = (id) => {
+            setPolicies(policies.filter(policy => policy.id !== id));
+          };
+
+          const updatePolicy = (id, field, value) => {
+            setPolicies(policies.map(policy => {
+              if (policy.id === id) {
+                if (field === 'coveredMembers') {
+                  return { ...policy, coveredMembers: { ...policy.coveredMembers, ...value } };
+                }
+                return { ...policy, [field]: value };
+              }
+              return policy;
+            }));
+          };
+
+          const formatDate = (dateString) => {
+            if (!dateString) return '';
+            const [year, month, day] = dateString.split('-');
+            const date = new Date(year, month - 1, day);
+            return date.toLocaleDateString('en-US', { 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            });
+          };
+
+          const formatCurrency = (amount) => {
+            if (!amount) return '$0.00';
+            const num = parseFloat(amount.replace(/[,$]/g, ''));
+            return isNaN(num) ? '$0.00' : `$${num.toFixed(2)}`;
+          };
+
+          const calculateTotalPremium = () => {
+            return policies.reduce((total, policy) => {
+              if (policy.status === 'terminated') return total;
+              const premium = parseFloat(policy.premium.replace(/[,$]/g, '')) || 0;
+              return total + premium;
+            }, 0);
+          };
+
+          const getPolicyCounts = () => {
+            const counts = {
+              active: 0,
+              terminated: 0,
+              gracePeriod: 0
+            };
+            
+            policies.forEach(policy => {
+              if (policy.status === 'terminated') {
+                counts.terminated++;
+              } else if (policy.status === 'grace period') {
+                counts.gracePeriod++;
+              } else {
+                counts.active++;
+              }
+            });
+            
+            return counts;
+          };
+
+          const groupPoliciesByType = () => {
+            const grouped = {
+              health: [],
+              supplements: [],
+              life: []
+            };
+            
+            policies.forEach(policy => {
+              if (policy.type === 'health') grouped.health.push(policy);
+              else if (policy.type === 'supplements') grouped.supplements.push(policy);
+              else if (policy.type === 'life') grouped.life.push(policy);
+            });
+            
+            return grouped;
+          };
+
+          const generateEmail = () => {
+            const groupedPolicies = groupPoliciesByType();
+            const totalPremium = calculateTotalPremium();
+            const policyCounts = getPolicyCounts();
+            
+            let emailContent = `Subject: Policy Review Summary - ${primaryClient}\n\n`;
+            emailContent += `Dear ${primaryClient},\n\n`;
+            emailContent += `Please find below your comprehensive policy review summary:\n\n`;
+            
+            let htmlContent = `<!DOCTYPE html>
+<html>
+<head>
+<style>
+body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; }
+h2 { color: #2563eb; border-bottom: 2px solid #2563eb; padding-bottom: 5px; }
+.policy { background: #f9fafb; padding: 15px; margin: 10px 0; border-radius: 8px; border-left: 4px solid #2563eb; }
+.premium-active { background-color: #dcfce7; color: #166534; padding: 4px 8px; border-radius: 4px; font-weight: bold; }
+.premium-terminated { background-color: #fee2e2; color: #991b1b; padding: 4px 8px; border-radius: 4px; font-weight: bold; text-decoration: line-through; }
+.summary { background: #eff6ff; padding: 15px; border-radius: 8px; margin-top: 20px; }
+.label { font-weight: bold; color: #1f2937; }
+</style>
+</head>
+<body>
+<p><strong>Subject: Policy Review Summary - ${primaryClient}</strong></p>
+<p>Dear ${primaryClient},</p>
+<p>Please find below your comprehensive policy review summary:</p>
+`;
+            
+            const processSection = (policies, sectionTitle) => {
+              if (policies.length > 0) {
+                emailContent += `${sectionTitle}:\n`;
+                emailContent += `${'='.repeat(40)}\n`;
+                htmlContent += `<h2>${sectionTitle}</h2>`;
+                
+                policies.forEach((policy, index) => {
+                  emailContent += `${index + 1}. Policy Name: ${policy.name}\n`;
+                  emailContent += `   Status: ${policy.status.charAt(0).toUpperCase() + policy.status.slice(1)}\n`;
+                  
+                  htmlContent += `<div class="policy">`;
+                  htmlContent += `<p><span class="label">${index + 1}. Policy Name:</span> ${policy.name}</p>`;
+                  htmlContent += `<p><span class="label">Status:</span> ${policy.status.charAt(0).toUpperCase() + policy.status.slice(1)}</p>`;
+                  
+                  if (policy.status === 'grace period') {
+                    if (policy.lastPaymentDate) {
+                      emailContent += `   Last Payment Date: ${formatDate(policy.lastPaymentDate)}\n`;
+                      htmlContent += `<p><span class="label">Last Payment Date:</span> ${formatDate(policy.lastPaymentDate)}</p>`;
+                    }
+                    if (policy.gracePeriodEndDate) {
+                      emailContent += `   Grace Period Ends: ${formatDate(policy.gracePeriodEndDate)}\n`;
+                      htmlContent += `<p><span class="label">Grace Period Ends:</span> ${formatDate(policy.gracePeriodEndDate)}</p>`;
+                    }
+                  }
+                  
+                  if (policy.status === 'terminated' && policy.terminationDate) {
+                    emailContent += `   Termination Date: ${formatDate(policy.terminationDate)}\n`;
+                    htmlContent += `<p><span class="label">Termination Date:</span> ${formatDate(policy.terminationDate)}</p>`;
+                  }
+                  
+                  emailContent += `   Premium: ${formatCurrency(policy.premium)}${policy.status === 'terminated' ? ' (not included in total)' : ''}\n`;
+                  const premiumClass = policy.status === 'terminated' ? 'premium-terminated' : 'premium-active';
+                  htmlContent += `<p><span class="label">Premium:</span> <span class="${premiumClass}">${formatCurrency(policy.premium)}</span>${policy.status === 'terminated' ? ' <em>(not included in total)</em>' : ''}</p>`;
+                  
+                  const coveredMembers = Object.entries(policy.coveredMembers)
+                    .filter(([_, isChecked]) => isChecked)
+                    .map(([name, _]) => name);
+                  emailContent += `   Members: ${coveredMembers.join(', ')}\n`;
+                  htmlContent += `<p><span class="label">Members:</span> ${coveredMembers.join(', ')}</p>`;
+                  
+                  if (policy.notes) {
+                    emailContent += `   Notes: ${policy.notes}\n`;
+                    htmlContent += `<p><span class="label">Notes:</span> ${policy.notes}</p>`;
+                  }
+                  
+                  emailContent += `\n`;
+                  htmlContent += `</div>`;
+                });
+              }
+            };
+            
+            processSection(groupedPolicies.health, 'HEALTH INSURANCE POLICIES');
+            processSection(groupedPolicies.supplements, 'SUPPLEMENTAL INSURANCE POLICIES');
+            processSection(groupedPolicies.life, 'LIFE INSURANCE POLICIES');
+            
+            emailContent += `SUMMARY:\n`;
+            emailContent += `${'='.repeat(40)}\n`;
+            emailContent += `Total Policies: ${policies.length}\n`;
+            emailContent += `  - Health Insurance: ${groupedPolicies.health.length}\n`;
+            emailContent += `  - Supplemental Insurance: ${groupedPolicies.supplements.length}\n`;
+            emailContent += `  - Life Insurance: ${groupedPolicies.life.length}\n`;
+            emailContent += `\nPolicy Status:\n`;
+            emailContent += `  - Active Policies: ${policyCounts.active}\n`;
+            if (policyCounts.gracePeriod > 0) {
+              emailContent += `  - Grace Period Policies: ${policyCounts.gracePeriod}\n`;
+            }
+            emailContent += `  - Terminated Policies: ${policyCounts.terminated}\n`;
+            emailContent += `\nTotal Monthly Premium (Active Policies Only): ${formatCurrency(totalPremium.toString())}\n\n`;
+            emailContent += `If you have any questions or need clarification on any of these policies, please don't hesitate to reach out.\n\n`;
+            emailContent += `Best regards,\n[Your Name]`;
+            
+            htmlContent += `<div class="summary">`;
+            htmlContent += `<h2>SUMMARY</h2>`;
+            htmlContent += `<p><span class="label">Total Policies:</span> ${policies.length}</p>`;
+            htmlContent += `<ul>`;
+            htmlContent += `<li>Health Insurance: ${groupedPolicies.health.length}</li>`;
+            htmlContent += `<li>Supplemental Insurance: ${groupedPolicies.supplements.length}</li>`;
+            htmlContent += `<li>Life Insurance: ${groupedPolicies.life.length}</li>`;
+            htmlContent += `</ul>`;
+            htmlContent += `<p><span class="label">Policy Status:</span></p>`;
+            htmlContent += `<ul>`;
+            htmlContent += `<li>Active Policies: ${policyCounts.active}</li>`;
+            if (policyCounts.gracePeriod > 0) {
+              htmlContent += `<li>Grace Period Policies: ${policyCounts.gracePeriod}</li>`;
+            }
+            htmlContent += `<li>Terminated Policies: ${policyCounts.terminated}</li>`;
+            htmlContent += `</ul>`;
+            htmlContent += `<p style="font-size: 18px; margin-top: 15px;"><span class="label">Total Monthly Premium (Active Policies Only):</span> <span class="premium-active">${formatCurrency(totalPremium.toString())}</span></p>`;
+            htmlContent += `</div>`;
+            
+            htmlContent += `<p style="margin-top: 20px;">If you have any questions or need clarification on any of these policies, please don't hesitate to reach out.</p>`;
+            htmlContent += `<p>Best regards,<br>[Your Name]</p>`;
+            htmlContent += `</body></html>`;
+            
+            setGeneratedEmail(emailContent);
+            setGeneratedHtmlEmail(htmlContent);
+          };
+
+          const copyToClipboard = (content, isHtml = false) => {
+            if (isHtml) {
+              const blob = new Blob([content], { type: 'text/html' });
+              const plainBlob = new Blob([content.replace(/<[^>]*>/g, '')], { type: 'text/plain' });
+              const clipboardItem = new ClipboardItem({
+                'text/html': blob,
+                'text/plain': plainBlob
+              });
+              navigator.clipboard.write([clipboardItem]).then(() => {
+                alert('HTML email copied to clipboard!');
+              }).catch(() => {
+                navigator.clipboard.writeText(content);
+                alert('HTML code copied to clipboard!');
+              });
+            } else {
+              navigator.clipboard.writeText(content);
+              alert('Plain text email copied to clipboard!');
+            }
+          };
+
+          const getTypeIcon = (type) => {
+            switch(type) {
+              case 'health': return <Heart />;
+              case 'supplements': return <Shield />;
+              case 'life': return <Users />;
+              default: return <FileText />;
+            }
+          };
+
+          return (
+            <div className="max-w-6xl mx-auto p-6 bg-gray-50 min-h-screen">
+              <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <div className="flex items-center gap-2 mb-6">
+                  <FileText />
+                  <h1 className="text-2xl font-bold text-gray-800">Policy Review Email Generator</h1>
+                </div>
+                
+                <div className="mb-6">
+                  <h2 className="text-lg font-semibold text-gray-800 mb-4">Client Information</h2>
+                  
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <User /> Primary Client Name
+                    </label>
+                    <input
+                      type="text"
+                      value={primaryClient}
+                      onChange={(e) => setPrimaryClient(e.target.value)}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Enter primary client name"
+                    />
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Dependent Clients (Optional)
+                      </label>
+                      <button
+                        onClick={addDependentClient}
+                        className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1"
+                      >
+                        <Plus /> Add Dependent
+                      </button>
+                    </div>
+                    
+                    {dependentClients.map((dependent, index) => (
+                      <div key={index} className="flex items-center gap-2 mb-2">
+                        <input
+                          type="text"
+                          value={dependent}
+                          onChange={(e) => updateDependentClient(index, e.target.value)}
+                          className="flex-1 p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Dependent name"
+                        />
+                        {dependentClients.length > 1 && (
+                          <button
+                            onClick={() => removeDependentClient(index)}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            <Trash2 />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-semibold text-gray-800">Policies</h2>
+                    <button
+                      onClick={addPolicy}
+                      className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      <Plus /> Add Policy
+                    </button>
+                  </div>
+
+                  {policies.map((policy) => (
+                    <div key={policy.id} className="bg-gray-50 rounded-lg p-4 mb-4 border border-gray-200">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2">
+                          {getTypeIcon(policy.type)}
+                          <span className="font-medium text-gray-700">Policy Details</span>
+                        </div>
+                        <button
+                          onClick={() => removePolicy(policy.id)}
+                          className="text-red-600 hover:text-red-800 transition-colors"
+                        >
+                          <Trash2 />
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Policy Name</label>
+                          <input
+                            type="text"
+                            value={policy.name}
+                            onChange={(e) => updatePolicy(policy.id, 'name', e.target.value)}
+                            className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Enter policy name"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                          <select
+                            value={policy.type}
+                            onChange={(e) => updatePolicy(policy.id, 'type', e.target.value)}
+                            className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          >
+                            <option value="health">Health Insurance</option>
+                            <option value="supplements">Supplemental Insurance</option>
+                            <option value="life">Life Insurance</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                          <select
+                            value={policy.status}
+                            onChange={(e) => updatePolicy(policy.id, 'status', e.target.value)}
+                            className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          >
+                            <option value="active">Active</option>
+                            <option value="grace period">Grace Period</option>
+                            <option value="terminated">Terminated</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Premium</label>
+                          <input
+                            type="text"
+                            value={policy.premium}
+                            onChange={(e) => updatePolicy(policy.id, 'premium', e.target.value)}
+                            className={`w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                              policy.status === 'terminated' 
+                                ? 'bg-red-50 border-red-300' 
+                                : 'bg-green-50 border-green-300'
+                            }`}
+                            placeholder="$0.00"
+                          />
+                        </div>
+
+                        <div className="md:col-span-2">
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Notes (Optional)</label>
+                          <input
+                            type="text"
+                            value={policy.notes}
+                            onChange={(e) => updatePolicy(policy.id, 'notes', e.target.value)}
+                            className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Additional notes"
+                          />
+                        </div>
+                      </div>
+
+                      {policy.status === 'grace period' && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                          <div>
+                            <label className="block text-sm font-medium text-yellow-800 mb-1">Last Payment Date</label>
+                            <input
+                              type="date"
+                              value={policy.lastPaymentDate}
+                              onChange={(e) => updatePolicy(policy.id, 'lastPaymentDate', e.target.value)}
+                              className="w-full p-2 border border-yellow-300 rounded focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-yellow-800 mb-1">Grace Period End Date</label>
+                            <input
+                              type="date"
+                              value={policy.gracePeriodEndDate}
+                              onChange={(e) => updatePolicy(policy.id, 'gracePeriodEndDate', e.target.value)}
+                              className="w-full p-2 border border-yellow-300 rounded focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {policy.status === 'terminated' && (
+                        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                          <div>
+                            <label className="block text-sm font-medium text-red-800 mb-1">Termination Date</label>
+                            <input
+                              type="date"
+                              value={policy.terminationDate}
+                              onChange={(e) => updatePolicy(policy.id, 'terminationDate', e.target.value)}
+                              className="w-full p-2 border border-red-300 rounded focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Covered Members</label>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {getAllClientNames().map((clientName) => (
+                            <div key={clientName} className="flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                id={`${policy.id}-${clientName}`}
+                                checked={policy.coveredMembers[clientName] || false}
+                                onChange={(e) => updatePolicy(policy.id, 'coveredMembers', { [clientName]: e.target.checked })}
+                                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                              />
+                              <label 
+                                htmlFor={`${policy.id}-${clientName}`}
+                                className="text-sm text-gray-700 cursor-pointer"
+                              >
+                                {clientName}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                        {getAllClientNames().length === 0 && (
+                          <p className="text-sm text-gray-500 italic">Add client names above to select covered members</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex justify-center mb-6">
+                  <button
+                    onClick={generateEmail}
+                    disabled={!primaryClient || policies.length === 0}
+                    className="flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  >
+                    <Mail /> Generate Email
+                  </button>
+                </div>
+
+                {generatedEmail && (
+                  <div className="space-y-6">
+                    <div className="bg-white border border-gray-300 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-semibold text-gray-800">Plain Text Email</h3>
+                        <button
+                          onClick={() => copyToClipboard(generatedEmail, false)}
+                          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                          Copy Plain Text
+                        </button>
+                      </div>
+                      <div className="bg-gray-50 p-4 rounded border max-h-96 overflow-y-auto">
+                        <pre className="whitespace-pre-wrap text-sm text-gray-700 font-mono">
+                          {generatedEmail}
+                        </pre>
+                      </div>
+                    </div>
+
+                    <div className="bg-white border border-gray-300 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-semibold text-gray-800">HTML Email (with color highlighting)</h3>
+                        <button
+                          onClick={() => copyToClipboard(generatedHtmlEmail, true)}
+                          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                        >
+                          Copy HTML Email
+                        </button>
+                      </div>
+                      <div className="bg-white p-4 rounded border max-h-96 overflow-y-auto">
+                        <div dangerouslySetInnerHTML={{ __html: generatedHtmlEmail }} />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<PolicyReviewEmailGenerator />);
+    </script>
+</body>
+</html>
